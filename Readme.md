@@ -61,7 +61,7 @@ mvn test
       "status": 400,
       "error": "Bad Request",
       "message": "Basket cannot be empty.",
-      "path": "/api/book/discounts
+      "path": "/api/book/discounts"
     }
     ```
 - ### Error Response (500 Internal Server Error)
@@ -79,4 +79,54 @@ mvn test
 - Sum of quantities is 0
 - Duplicate books exist (same bookId repeated)
 - Any quantity is negative
-
+### Sample curl Commands (Local Testing)
+- valide basket:
+```bash
+curl -X POST "http://localhost:8080/api/book/discounts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "books": [
+      { "bookId": 1, "quantity": 1 },
+      { "bookId": 2, "quantity": 1 }
+    ]
+  }'
+```
+- invalid basket (empty):
+```bash
+curl -X POST "http://localhost:8080/api/book/discounts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "books": []
+  }'
+```
+- invalid basket (Quantity = 0):
+```bash
+curl -X POST "http://localhost:8080/api/book/discounts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "books": [
+      { "bookId": 1, "quantity": 0 }
+    ]
+  }'
+```
+- invalid basket (Negative Quantity):
+```bash
+curl -X POST "http://localhost:8080/api/book/discounts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "books": [
+      { "bookId": 1, "quantity": -1 }
+    ]
+  }'
+```
+- invalid basket (Duplicate Books):
+```bash
+curl -X POST "http://localhost:8080/api/book/discounts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "books": [
+      { "bookId": 1, "quantity": 1 },
+      { "bookId": 1, "quantity": 2 }
+    ]
+  }'
+```
