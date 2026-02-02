@@ -3,6 +3,7 @@ package com.store.books.controller;
 
 import com.store.books.service.BookService;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -15,19 +16,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = BookController.class)
 public class BookControllerTest {
-
-    private final MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
     @MockitoBean
     private BookService bookService;
 
-    BookControllerTest(MockMvc mockMvc) {
-        this.mockMvc = mockMvc;
-    }
 
     @Test
     void shouldReturn200_whenBasketIsValid() throws Exception {
-        given(bookService.calculateMinimumPrice(any()))
+        given(bookService.placeOrder(any()))
                 .willReturn(95.00);
 
         String jsonRequest = """
