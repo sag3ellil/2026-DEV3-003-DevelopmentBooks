@@ -57,6 +57,12 @@ public class BookServiceTest {
     }
 
     @Test
+    void testCalculatePrice_OptimalGrouping_2_2_2_1_1_ShouldPrefer4And4Over5And3() {
+        double price = bookService.calculateMinimumPrice(new int[]{2,2,2,1,1});
+        assertEquals(320, price);
+    }
+
+    @Test
     void testEmptyBasket_ReturnsZero() {
         double price = bookService.calculateMinimumPrice(new int[]{});
         assertEquals(0, price);
