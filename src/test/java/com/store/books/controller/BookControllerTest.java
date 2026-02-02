@@ -45,5 +45,69 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.price").value(95.00));
     }
 
+    @Test
+    void shouldReturn400_whenQuantityIsInvalid() throws Exception {
+        given(bookService.placeOrder(any(BasketDTO.class)))
+                .willThrow(new InvalidRequestException("Basket cannot be empty."));
+        String jsonRequest = """
+                {
+                  "books": [
+                    { "bookId": "1", "quantity": 0 }
+                  ]
+                }
+                """;
 
+        mockMvc.perform(post("/api/book/discounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").value("/api/book/discounts"));
+    }
+
+
+
+    @Test
+    void shouldReturn500_whenServiceThrowsUnexpectedException() throws Exception {
+        given(bookService.placeOrder(any()))
+                .willThrow(new RuntimeException("Something bad happened"));
+
+        String jsonRequest = """
+                {
+                  "books": [
+                    { "bookId": 1, "quantity": 1 }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/book/discounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message").value("Unexpected error occurred"))
+                .andExpect(jsonPath("$.path").value("/api/book/discounts"));
+    }
+
+    @Test
+    void shouldReturn400_whenBasketIsInvalid() throws Exception {
+        given(bookService.placeOrder(any(BasketDTO.class)))
+                .willThrow(new InvalidRequestException("Basket cannot be empty."));
+
+        String jsonRequest = """
+            {
+              "books": []
+            }
+            """;
+
+        mockMvc.perform(post("/api/book/discounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -7,7 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 @ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
     @InjectMocks
@@ -97,6 +100,69 @@ public class BookServiceTest {
         BasketDTO basketDTO = new BasketDTO(new ArrayList<>());
         double price = bookService.calculateMinimumPrice(basketDTO.books());
         assertEquals(0, price);
+    }
+
+    @Test
+    void shouldReturnPrice_whenBasketIsValid() {
+        BookService service = new BookService();
+
+        BasketDTO basket = new BasketDTO(List.of(
+                new BookDTO(1L, 1),
+                new BookDTO(2L, 1)
+        ));
+
+        Double price = service.placeOrder(basket);
+
+        assertNotNull(price);
+        assertTrue(price > 0);
+    }
+
+    @Test
+    void shouldThrow_whenBasketIsEmpty() {
+        BookService service = new BookService();
+
+        BasketDTO basket = new BasketDTO(List.of());
+
+        InvalidRequestException ex = assertThrows(
+                InvalidRequestException.class,
+                () -> service.placeOrder(basket)
+        );
+
+        assertEquals("Basket cannot be empty.", ex.getMessage());
+    }
+
+    @Test
+    void shouldThrow_whenAllQuantitiesAreZero() {
+        BookService service = new BookService();
+
+        BasketDTO basket = new BasketDTO(List.of(
+                new BookDTO(1L, 0),
+                new BookDTO(2L, 0)
+        ));
+
+        InvalidRequestException ex = assertThrows(
+                InvalidRequestException.class,
+                () -> service.placeOrder(basket)
+        );
+
+        assertEquals("Basket cannot be empty.", ex.getMessage());
+    }
+
+    @Test
+    void shouldThrow_whenBasketContainsDuplicateBooks() {
+        BookService service = new BookService();
+
+        BasketDTO basket = new BasketDTO(List.of(
+                new BookDTO(1L, 1),
+                new BookDTO(1L, 2)
+        ));
+
+        InvalidRequestException ex = assertThrows(
+                InvalidRequestException.class,
+                () -> service.placeOrder(basket)
+        );
+
+        assertEquals("Duplicate books in the basket.", ex.getMessage());
     }
 
 }
