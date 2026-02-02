@@ -2,6 +2,7 @@ package com.store.books.service;
 
 import com.store.books.dtos.BasketDTO;
 import com.store.books.dtos.BookDTO;
+import com.store.books.exception.InvalidRequestException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -46,6 +47,21 @@ public class BookService {
     }
 
     public Double placeOrder(BasketDTO basketDTO) {
-       return calculateMinimumPrice(basketDTO.books());
+        validateBasket(basketDTO);
+        return calculateMinimumPrice(basketDTO.books());
+    }
+
+    private void validateBasket(BasketDTO basket) {
+        List<BookDTO> books = basket.books();
+
+        if (books.isEmpty() || books.stream().mapToDouble(BookDTO::quantity).sum() == 0) {
+            throw new InvalidRequestException("Basket cannot be empty.");
+        }
+        if (books.size() != books.stream().map(BookDTO::bookId).distinct().count()) {
+            throw new InvalidRequestException("Duplicate books in the basket.");
+        }
+        if (books.stream().map(BookDTO::quantity).anyMatch(quantity -> quantity < 0)) {
+            throw new InvalidRequestException("Book quantity cannot be negative.");
+        }
     }
 }

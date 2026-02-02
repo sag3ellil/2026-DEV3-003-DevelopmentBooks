@@ -17,7 +17,7 @@ public class BookController {
     private BookService bookService;
     @PostMapping("/discounts")
     public ResponseEntity<PriceResponseDTO> calculateDiscount(@RequestBody BasketDTO basketDTO) {
-        Double price = bookService.placeOrder(basketDTO);
+        double price = bookService.placeOrder(basketDTO);
         return ResponseEntity.ok(new PriceResponseDTO(price));
     }
 }

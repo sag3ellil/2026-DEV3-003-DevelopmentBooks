@@ -2,6 +2,7 @@ package com.store.books.service;
 
 import com.store.books.dtos.BasketDTO;
 import com.store.books.dtos.BookDTO;
+import com.store.books.exception.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
