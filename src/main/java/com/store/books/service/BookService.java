@@ -12,23 +12,26 @@ public class BookService {
         if (basket.length == 0 || Arrays.stream(basket).sum() == 0) {
             return 0;
         }
-        double totalPrice = 0;
+        double minPrice = Double.MAX_VALUE;
 
-        List<Integer> bookCounts = new ArrayList<>();
-        for (int basketItem : basket) {
-            if (basketItem > 0) {
-                bookCounts.add(basketItem);
+        int distinctBooks = (int) Arrays.stream(basket).filter(q -> q > 0).count();
+
+        for (int setSize = 1; setSize <= distinctBooks; setSize++) {
+            int[] remainingBasket = Arrays.copyOf(basket, basket.length);
+            int removed = 0;
+            for (int i = 0; i < remainingBasket.length && removed < setSize; i++) {
+                if (remainingBasket[i] > 0) {
+                    remainingBasket[i]--;
+                    removed++;
+                }
             }
-        }
-        while (!bookCounts.isEmpty()) {
-            int size = bookCounts.size();
-            double total = size * BOOK_PRICE * DISCOUNTS[size];
-            totalPrice += total;
 
-            bookCounts.replaceAll(bookCount -> bookCount - 1);
-            bookCounts.removeIf(bookCount -> bookCount == 0);
-        }
+            double setPrice = setSize * BOOK_PRICE * DISCOUNTS[setSize];
 
-        return totalPrice;
+            double remainingPrice = calculateMinimumPrice(remainingBasket);
+
+            minPrice = Math.min(minPrice, setPrice + remainingPrice);
+        }
+        return minPrice;
     }
 }
