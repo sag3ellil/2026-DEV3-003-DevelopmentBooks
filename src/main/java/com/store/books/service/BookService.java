@@ -36,54 +36,51 @@ public class BookService {
                 continue;
             }
 
-            int distinctBooks = currentState.distinctCount();
+            minimumTotalPrice = exploreNextStates(
+                    currentState,
+                    currentCost,
+                    statesToExplore,
+                    minimumCostByState,
+                    minimumTotalPrice
+            );
+        }
 
-            for (int setSize = 1; setSize <= distinctBooks; setSize++) {
-                BasketState nextState = currentState.removeOneFromDistinctBooks(setSize);
+        return minimumTotalPrice;
+    }
 
-                double nextCost = currentCost + calculateSetPrice(setSize);
+    private double exploreNextStates(
+            BasketState currentState,
+            double currentCost,
+            Queue<BasketState> pendingStates,
+            Map<BasketState, Double> bestCostByState,
+            double minimumTotalPrice
+    ) {
+        int maxSetSize = currentState.distinctCount();
 
-                Double knownBestCost = minimumCostByState.get(nextState);
-                if (knownBestCost == null || nextCost < knownBestCost) {
-                    minimumCostByState.put(nextState, nextCost);
-                    statesToExplore.add(nextState);
-                }
+        for (int setSize = 1; setSize <= maxSetSize; setSize++) {
+            BasketState nextState = currentState.removeOneFromDistinctBooks(setSize);
+            double nextCost = currentCost + calculateSetPrice(setSize);
+
+            if (isBetterCost(nextState, nextCost, bestCostByState)) {
+                bestCostByState.put(nextState, nextCost);
+                pendingStates.add(nextState);
             }
         }
 
         return minimumTotalPrice;
     }
 
+    private boolean isBetterCost(
+            BasketState state,
+            double candidateCost,
+            Map<BasketState, Double> bestCostByState
+    ) {
+        Double knownBestCost = bestCostByState.get(state);
+        return knownBestCost == null || candidateCost < knownBestCost;
+    }
+
     private double calculateSetPrice(int setSize) {
         return setSize * BOOK_PRICE * DISCOUNTS[setSize];
-    }
-
-    private int countDistinctBooks(List<BookDTO> basket) {
-        int distinct = 0;
-        for (BookDTO book : basket) {
-            if (book.quantity() > 0) distinct++;
-        }
-        return distinct;
-    }
-
-    private List<BookDTO> removeOneFromDistinctBooks(List<BookDTO> basket, int setSize) {
-        List<BookDTO> remainingBasket = new ArrayList<>(basket);
-
-        int removed = 0;
-        for (int i = 0; i < remainingBasket.size() && removed < setSize; i++) {
-            BookDTO currentBook = remainingBasket.get(i);
-
-            if (currentBook.quantity() > 0) {
-                remainingBasket.set(i, new BookDTO(
-                        currentBook.bookId(),
-                        currentBook.quantity() - 1
-                ));
-                removed++;
-            }
-        }
-
-        remainingBasket.removeIf(book -> book.quantity() == 0);
-        return remainingBasket;
     }
 
     private boolean isEmptyBasket(List<BookDTO> basket) {
