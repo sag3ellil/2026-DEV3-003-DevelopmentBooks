@@ -13,37 +13,49 @@ public class BookService {
     private static final double BOOK_PRICE = 50.0;
     private static final double[] DISCOUNTS = { 0, 1.0, 0.95, 0.9, 0.8, 0.75 };
 
-    public double calculateMinimumPrice(List<BookDTO> books) {
-        if (books.size() == 0 || books.stream().mapToInt(BookDTO::quantity).sum() == 0) {
+    public double calculateMinimumPrice(List<BookDTO> basket) {
+        if (isEmptyBasket(basket)) {
             return 0;
         }
-        double minPrice = Double.MAX_VALUE;
 
-        int distinctBooks = (int) books.stream().filter(book -> book.quantity() > 0).count();
+        double minimumTotalPrice = Double.MAX_VALUE;
+
+        int distinctBooks = (int) basket.stream().filter(book -> book.quantity() > 0).count();
 
         for (int setSize = 1; setSize <= distinctBooks; setSize++) {
-            List<BookDTO> remainingBooks = new ArrayList<>(books);
-            int removed = 0;
-            for (int i = 0; i < remainingBooks.size() && removed < setSize; i++) {
-                BookDTO current = remainingBooks.get(i);
-                if (current.quantity() > 0) {
-                    BookDTO updated = new BookDTO(
-                            current.bookId(),
-                            current.quantity() - 1
-                    );
-                    remainingBooks.set(i, updated);
-                    removed++;
-                }
-            }
+            List<BookDTO> remainingBasket = removeOneFromDistinctBooks(basket, setSize);
 
-            remainingBooks.removeIf(book -> book.quantity() == 0);
+            double currentSetPrice = setSize * BOOK_PRICE * DISCOUNTS[setSize];
+            double remainingPrice = calculateMinimumPrice(remainingBasket);
 
-            double setPrice = setSize * BOOK_PRICE * DISCOUNTS[setSize];
-            double remainingPrice = calculateMinimumPrice(remainingBooks);
-
-            minPrice = Math.min(minPrice, setPrice + remainingPrice);
+            minimumTotalPrice = Math.min(minimumTotalPrice, currentSetPrice + remainingPrice);
         }
-        return minPrice;
+        return minimumTotalPrice;
+    }
+
+    private List<BookDTO> removeOneFromDistinctBooks(List<BookDTO> basket, int setSize) {
+        List<BookDTO> remainingBasket = new ArrayList<>(basket);
+
+        int removed = 0;
+        for (int i = 0; i < remainingBasket.size() && removed < setSize; i++) {
+            BookDTO currentBook = remainingBasket.get(i);
+
+            if (currentBook.quantity() > 0) {
+                remainingBasket.set(i, new BookDTO(
+                        currentBook.bookId(),
+                        currentBook.quantity() - 1
+                ));
+                removed++;
+            }
+        }
+
+        remainingBasket.removeIf(book -> book.quantity() == 0);
+        return remainingBasket;
+    }
+
+    private boolean isEmptyBasket(List<BookDTO> basket) {
+        return basket.isEmpty()
+                || basket.stream().mapToInt(BookDTO::quantity).sum() == 0;
     }
 
     public Double placeOrder(BasketDTO basketDTO) {
