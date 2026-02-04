@@ -5,8 +5,7 @@ import com.store.books.dtos.BookDTO;
 import com.store.books.exception.InvalidRequestException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class BookService {
@@ -18,18 +17,40 @@ public class BookService {
             return 0;
         }
 
+        BasketState startState = BasketState.from(basket);
+
+        Map<BasketState, Double> minimumCostByState = new HashMap<>();
+        Queue<BasketState> statesToExplore = new ArrayDeque<>();
+
+        minimumCostByState.put(startState, 0.0);
+        statesToExplore.add(startState);
+
         double minimumTotalPrice = Double.MAX_VALUE;
 
-        int distinctBooks = countDistinctBooks(basket);
+        while (!statesToExplore.isEmpty()) {
+            BasketState currentState = statesToExplore.poll();
+            double currentCost = minimumCostByState.get(currentState);
 
-        for (int setSize = 1; setSize <= distinctBooks; setSize++) {
-            List<BookDTO> remainingBasket = removeOneFromDistinctBooks(basket, setSize);
+            if (currentState.isEmpty()) {
+                minimumTotalPrice = Math.min(minimumTotalPrice, currentCost);
+                continue;
+            }
 
-            double currentSetPrice = calculateSetPrice(setSize);
-            double remainingPrice = calculateMinimumPrice(remainingBasket);
+            int distinctBooks = currentState.distinctCount();
 
-            minimumTotalPrice = Math.min(minimumTotalPrice, currentSetPrice + remainingPrice);
+            for (int setSize = 1; setSize <= distinctBooks; setSize++) {
+                BasketState nextState = currentState.removeOneFromDistinctBooks(setSize);
+
+                double nextCost = currentCost + calculateSetPrice(setSize);
+
+                Double knownBestCost = minimumCostByState.get(nextState);
+                if (knownBestCost == null || nextCost < knownBestCost) {
+                    minimumCostByState.put(nextState, nextCost);
+                    statesToExplore.add(nextState);
+                }
+            }
         }
+
         return minimumTotalPrice;
     }
 
@@ -86,6 +107,59 @@ public class BookService {
         }
         if (books.stream().map(BookDTO::quantity).anyMatch(quantity -> quantity < 0)) {
             throw new InvalidRequestException("Book quantity cannot be negative.");
+        }
+    }
+
+    private static final class BasketState {
+        private final int[] quantities;
+
+        private BasketState(int[] quantities) {
+            this.quantities = quantities;
+        }
+
+        static BasketState from(List<BookDTO> basket) {
+            int[] normalized = basket.stream()
+                    .mapToInt(BookDTO::quantity)
+                    .filter(q -> q > 0)
+                    .sorted()
+                    .toArray();
+
+            return new BasketState(normalized);
+        }
+
+        boolean isEmpty() {
+            return quantities.length == 0;
+        }
+
+        int distinctCount() {
+            return quantities.length;
+        }
+
+        BasketState removeOneFromDistinctBooks(int setSize) {
+            int[] next = quantities.clone();
+
+            for (int i = 0; i < setSize; i++) {
+                next[next.length - 1 - i]--;
+            }
+
+            int[] normalized = Arrays.stream(next)
+                    .filter(q -> q > 0)
+                    .sorted()
+                    .toArray();
+
+            return new BasketState(normalized);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof BasketState that)) return false;
+            return Arrays.equals(quantities, that.quantities);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(quantities);
         }
     }
 }
