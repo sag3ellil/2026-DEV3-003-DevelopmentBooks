@@ -105,14 +105,12 @@ public class BookServiceTest {
 
     @Test
     void shouldReturnPrice_whenBasketIsValid() {
-        BookService service = new BookService();
-
         BasketDTO basket = new BasketDTO(List.of(
                 new BookDTO(1L, 1),
                 new BookDTO(2L, 1)
         ));
 
-        Double price = service.placeOrder(basket);
+        Double price = bookService.placeOrder(basket);
 
         assertNotNull(price);
         assertTrue(price > 0);
@@ -120,13 +118,11 @@ public class BookServiceTest {
 
     @Test
     void shouldThrow_whenBasketIsEmpty() {
-        BookService service = new BookService();
-
         BasketDTO basket = new BasketDTO(List.of());
 
         InvalidRequestException ex = assertThrows(
                 InvalidRequestException.class,
-                () -> service.placeOrder(basket)
+                () -> bookService.placeOrder(basket)
         );
 
         assertEquals("Basket cannot be empty.", ex.getMessage());
@@ -134,7 +130,6 @@ public class BookServiceTest {
 
     @Test
     void shouldThrow_whenAllQuantitiesAreZero() {
-        BookService service = new BookService();
 
         BasketDTO basket = new BasketDTO(List.of(
                 new BookDTO(1L, 0),
@@ -143,7 +138,7 @@ public class BookServiceTest {
 
         InvalidRequestException ex = assertThrows(
                 InvalidRequestException.class,
-                () -> service.placeOrder(basket)
+                () -> bookService.placeOrder(basket)
         );
 
         assertEquals("Basket cannot be empty.", ex.getMessage());
@@ -151,8 +146,6 @@ public class BookServiceTest {
 
     @Test
     void shouldThrow_whenBasketContainsDuplicateBooks() {
-        BookService service = new BookService();
-
         BasketDTO basket = new BasketDTO(List.of(
                 new BookDTO(1L, 1),
                 new BookDTO(1L, 2)
@@ -160,7 +153,7 @@ public class BookServiceTest {
 
         InvalidRequestException ex = assertThrows(
                 InvalidRequestException.class,
-                () -> service.placeOrder(basket)
+                () -> bookService.placeOrder(basket)
         );
 
         assertEquals("Duplicate books in the basket.", ex.getMessage());

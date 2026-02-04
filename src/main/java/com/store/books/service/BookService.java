@@ -20,17 +20,29 @@ public class BookService {
 
         double minimumTotalPrice = Double.MAX_VALUE;
 
-        int distinctBooks = (int) basket.stream().filter(book -> book.quantity() > 0).count();
+        int distinctBooks = countDistinctBooks(basket);
 
         for (int setSize = 1; setSize <= distinctBooks; setSize++) {
             List<BookDTO> remainingBasket = removeOneFromDistinctBooks(basket, setSize);
 
-            double currentSetPrice = setSize * BOOK_PRICE * DISCOUNTS[setSize];
+            double currentSetPrice = calculateSetPrice(setSize);
             double remainingPrice = calculateMinimumPrice(remainingBasket);
 
             minimumTotalPrice = Math.min(minimumTotalPrice, currentSetPrice + remainingPrice);
         }
         return minimumTotalPrice;
+    }
+
+    private double calculateSetPrice(int setSize) {
+        return setSize * BOOK_PRICE * DISCOUNTS[setSize];
+    }
+
+    private int countDistinctBooks(List<BookDTO> basket) {
+        int distinct = 0;
+        for (BookDTO book : basket) {
+            if (book.quantity() > 0) distinct++;
+        }
+        return distinct;
     }
 
     private List<BookDTO> removeOneFromDistinctBooks(List<BookDTO> basket, int setSize) {
